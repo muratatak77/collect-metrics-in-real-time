@@ -1,0 +1,40 @@
+version: "3.9"
+
+volumes:
+  postgres-data:
+
+services:
+  web:
+    build: .
+    depends_on:
+      - db
+    links:
+      - db
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres@db/challenge"
+
+  db:
+    image: postgres:13-alpine
+    ports:
+      - 5432:5432 #for testing purposes
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    environment:
+      DB_HOSTNAME: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      POSTGRES_PASSWORD: postgres
+
+
+  agent:
+    image: alpine
+    links:
+      - web
+    volumes:
+      - ./testing-script:/testing-script
+    working_dir: /testing-script
+    command: ./agent-linux
