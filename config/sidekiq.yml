@@ -1,0 +1,5 @@
+:max_retries: 1
+:concurrency: 5
+:queues:
+  - metric_data
+
