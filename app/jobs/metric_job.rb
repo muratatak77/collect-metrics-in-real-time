@@ -1,10 +1,12 @@
 require 'constant'
+require 'redis_utils'
 
 class MetricJob < ApplicationJob
 
 	queue_as :metric_data
 
 	def perform()
+		@sending_email_list = []
 		set_max_number_from_redis
 		start()
 	end
@@ -12,8 +14,6 @@ class MetricJob < ApplicationJob
 	private 
 
 	def start()
-		# puts "data : #{data}"
-		# Metric.create_metric(data)
 		result = []
 	  	_start = @max_number-(Constant::REDIS_INC_MOD-1)
 	  	_end =  @max_number
@@ -31,6 +31,7 @@ class MetricJob < ApplicationJob
 	  		next if value["redis_key"].to_i != id
 
 	  		result << Metric.get_object(value)
+
 	  		puts "========================="
 	  	end
 	  	create_metrics(result)
@@ -44,10 +45,17 @@ class MetricJob < ApplicationJob
 # https://github.com/zdennis/activerecord-import
 # =end
 	def create_metrics(result)
-		response = Metric.import! result  # or use import!
 		puts "Metrics will be created object of campaigns array: #{result}"
+
+		response = Metric.import! result  # or use import!
+		puts "response :>>>> #{response}"
+
 		if response
-			clear_redis()
+			clear_redis()	  		
+			if Rails.env.test?
+				return result
+			end
+	  		FindThresholdsAlertJob.set(queue: :metric_data).perform_later(JSON.dump(result))
 			puts "Success - All metrics were created."
 		else
 			puts "Fail object of metrics created : ERR: #{response.errors}"
@@ -65,7 +73,8 @@ class MetricJob < ApplicationJob
 	end
 
 	def set_max_number_from_redis
-		@max_number = $redis.get("metric_count")
+		@max_number = RedisUtils.get_inc_key
+		# @max_number = $redis.get("metric_count")
 		puts "START Metric JOB - max_number : #{@max_number}"
 		return "ERROR - Invalid Max Number" if @max_number.to_i == 0
 	  	@max_number = @max_number.to_i
