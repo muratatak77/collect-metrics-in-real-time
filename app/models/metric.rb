@@ -2,17 +2,6 @@ class Metric < ApplicationRecord
 
 	validates_presence_of :memused, :mempauses
 	
-	def self.create_metric(data)
-		metric = Metric.new(get_object(data))
-		puts  "Prepared metric object : #{metric.to_json}"
-		if metric.save!
-			puts "SAVE - Success : Metric :  #{metric.to_json}"
-		else
-			puts "SAVE - ERROR . Message : #{metric.errors.to_json}"
-		end
-	end
-
-
 	def self.get_object(params, is_new: false)
 		temp = {
 			txcount: params["txcount"],

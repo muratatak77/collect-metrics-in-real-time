@@ -70,6 +70,17 @@ rails console
 
 # Solving Detail
 
+
+#### Running Server
+
+```
+rails server
+```
+
+```
+ bundle exec sidekiq
+```
+
 ### Challenge details
 
 
