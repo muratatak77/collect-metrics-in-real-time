@@ -30,13 +30,13 @@ RSpec.describe Metric, :type => :model do
 
 
 	it "is valid with valid attributes" do
-			subject.memused = nil
+		subject.memused = nil
   		expect(subject).to_not be_valid
 	end
 
 	it "is valid create with valid attributes" do
 		metric = Metric.create(txcount: 27887,netpeers: 31847, ingresscount: 84059,mempauses: 55089,memused: 24728)
-  	expect(metric).to be_valid
+  		expect(metric).to be_valid
 	end
 
 end

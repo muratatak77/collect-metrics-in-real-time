@@ -3,7 +3,6 @@ require 'sidekiq/testing'
 
 RSpec.describe "Metrics", type: :request do
 
-	# data = File.read("spec/input.json")
   	Threshold.create(name: "ingresscount",min: 3000, max: 80000)
   	Threshold.create(name: "memused",min: 20000, max: 80000)
 
@@ -24,22 +23,16 @@ RSpec.describe "Metrics", type: :request do
 				post "/api/metrics", :params => {metric: item}, :headers => headers, as: :json
 				expect(response).to have_http_status(:success)
 			end
-
-			# expect(Metric).to be_processed_in :metric_data # or
 			sleep(1)
 			result = MetricJob.perform_now()
-			puts "result : #{result}"
 			sleep(1)
-
     		expect(Metric.count).to equal(5)
-
     		FindThresholdsAlertJob.perform_now(JSON.dump(result))
+			sleep(1)
+			expect(Alert.count).to be > 0
 
+   		end
 
-
-
-   end
-
-  end
+  	end
 
 end

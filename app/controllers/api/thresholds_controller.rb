@@ -4,7 +4,6 @@ class Api::ThresholdsController < ApplicationController
   # GET /thresholds
   def index
     @thresholds = Threshold.all
-
     render json: @thresholds
   end
 

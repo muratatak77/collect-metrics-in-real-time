@@ -66,3 +66,73 @@ Start rails console and then you can run
 ```
 rails console
 ```
+
+
+# Solving Detail
+
+### Challenge details
+
+
+1. collect these metrics in real time using the agent
+
+I created an endpoint to collect in real time. 
+I thought 
+```
+POST - http://localhost:3000/api/metrics
+GET  -  http://localhost:3000/api/metrics
+```
+
+2. build an endpoint to create threshold alerts
+
+```
+POST -  http://localhost:3000/api/tresholds
+GET  -  http://localhost:3000/api/tresholds
+```
+
+4. when an alert is triggered send an email to `<user provided from recruiter>@spin.pm` with corresponding information.
+```
+Class Name : ThresholdNotifier
+Email View : view/threshold_notifier/new_alert.html.erb
+```
+
+5. build an endpoint to change alert status (open, acknowledged, resolved)
+
+```
+GET -  http://localhost:3000/api/alert_update?alert_id=94&status=acknowledged
+GET -  http://localhost:3000/api/alert_update?alert_id=94&status=resolved
+```
+
+#### To sending an email please configure in env files.
+
+```
+  ENV['APPLICATION_HOST']= "http://localhost:3000/"
+  ENV['SMTP_NO_REPLY'] = "no-reply@spin.pm"
+  ENV['SENDING_EMAIL_TO'] = "daniel.varela@spin.pm"
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+
+  # SMTP settings for gmail
+  config.action_mailer.smtp_settings = {
+    :address              => "smtp.gmail.com",
+    :port                 => 587,
+    :user_name            => "<user provided from recruiter>@spin.pm",
+    :password             => "password",
+    :authentication       => "plain",
+    :enable_starttls_auto => true
+  }
+
+```
+
+
+#### Some Test Cases
+
+```
+
+rspec spec/requests/metric_spec.rb
+
+rspec spec/models/threshold_spec.rb
+
+rspec spec/models/metric_spec.rb
+```
+

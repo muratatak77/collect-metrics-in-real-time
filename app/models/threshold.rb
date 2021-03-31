@@ -1,4 +1,6 @@
 class Threshold < ApplicationRecord
+	has_many :alerts
+	
 	validates :name, presence: true
 	validates_uniqueness_of :name
   	validate :is_same?

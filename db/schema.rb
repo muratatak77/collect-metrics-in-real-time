@@ -10,10 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_29_202617) do
+ActiveRecord::Schema.define(version: 2021_03_30_222418) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "alerts", force: :cascade do |t|
+    t.string "status"
+    t.integer "threshold_id"
+    t.jsonb "metric", default: {}, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["threshold_id"], name: "index_alerts_on_threshold_id"
+  end
 
   create_table "metrics", force: :cascade do |t|
     t.integer "txcount"

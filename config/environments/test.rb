@@ -57,4 +57,25 @@ Rails.application.configure do
 
   # Annotate rendered view with file names.
   # config.action_view.annotate_rendered_view_with_filenames = true
+  
+  ENV['APPLICATION_HOST']= "http://localhost:3000/"
+  ENV['SMTP_NO_REPLY'] = "no-reply@pin.pm"
+  ENV['SENDING_EMAIL_TO'] = "daniel.varela@spin.pm"
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+
+  # SMTP settings for gmail
+  config.action_mailer.smtp_settings = {
+    :address              => "smtp.gmail.com",
+    :port                 => 587,
+    :user_name            => "<user provided from recruiter>@spin.pm",
+    :password             => "ma25as85",
+    :authentication       => "plain",
+    :enable_starttls_auto => true
+  }
+
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+
 end

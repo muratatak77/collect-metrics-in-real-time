@@ -12,9 +12,6 @@ RSpec.describe Threshold, type: :model do
 		)
 	}
 
-	it "is valid with valid attributes" do
-  		expect(subject).to be_valid
-	end
 
 	it "is valid with valid attributes" do
 		subject.name = nil
@@ -29,11 +26,9 @@ RSpec.describe Threshold, type: :model do
   		expect(th2).to_not be_valid
 	end
 
-
 	it "is not valid create" do
   		th = Threshold.create(name: "ingresscount",min: 100, max: 100)
   		expect(th).to_not be_valid
   	end
-
 
 end

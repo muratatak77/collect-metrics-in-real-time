@@ -1,39 +1,48 @@
 require 'constant'
 require 'redis_utils'
 
+=begin
+	The task of comparing the incoming metric data with the Threshold alert points we have.
+
+	We get some metrics data and we need to compare to the thresholds data.
+	If we have out of range , we need to create an alert. 
+	And finally we will start an email process using by notifier job.
+
+	1 - ) We get like these metric data from metric job
+
+		 [{:txcount=>9336, :netpeers=>72546, :ingresscount=>9107, :egresscount=>7940, 
+		 :procload=>6503, :sysload=>30552, :syswait=>99843, :threads=>52205, :writebytes=>61598, :readbytes=>67425, 
+		 :memallocs=>81351, :memfrees=>31515, :mempauses=>89757, :memused=>3687, 
+		 :created_at=>"2021-03-30T18:54:04.763Z", :updated_at=>"2021-03-30T18:54:04.763Z"}, 
+		 
+		 {:txcount=>61577, :netpeers=>7463, :ingresscount=>67996, :egresscount=>6420, :procload=>18623,
+		  :sysload=>60953, :syswait=>71137, :threads=>43133, :writebytes=>79241, :readbytes=>70059,
+		  :memallocs=>53033, :memfrees=>38643, :mempauses=>53891, :memused=>2002, 
+		  :created_at=>"2021-03-30T18:54:01.757Z", :updated_at=>"2021-03-30T18:54:01.757Z"}
+		]
+
+		Our threshold data : 
+
+		<Threshold id: 8, name: "memused", min: 30000, max: 90000, created_at: "2021-03-29 21:28:02.989235000 +0000", updated_at: "2021-03-29 21:28:02.989235000 +0000">
+
+		We need to compare and  if we have any corresponding range between min and max values, we will crate and alert
+
+=end
+
 class FindThresholdsAlertJob < ApplicationJob
 
 	def perform(metrics)
-		@sending_email_list = []
+		@sending_email_alert_ids = []
 		@metrics = JSON.load(metrics)
 		@thresholds = Threshold.get_all_threshold_from_cache
-		puts "ALL @thresholds : #{@thresholds.to_json}"
 		start
+		send_notifier_job
 	end
 
 	private 
 
-	def start		
 
-		# #<Threshold id: 8, name: "memused", min: 30000, max: 90000, created_at: "2021-03-29 21:28:02.989235000 +0000", updated_at: "2021-03-29 21:28:02.989235000 +0000">
-		# 
-		# 
-		# 
-		# [{:txcount=>9336, :netpeers=>72546, :ingresscount=>9107, :egresscount=>7940, 
-		# :procload=>6503, :sysload=>30552, :syswait=>99843, :threads=>52205, :writebytes=>61598, :readbytes=>67425, 
-		# :memallocs=>81351, :memfrees=>31515, :mempauses=>89757, :memused=>3687, 
-		# :created_at=>"2021-03-30T18:54:04.763Z", :updated_at=>"2021-03-30T18:54:04.763Z"}, 
-		# 
-		#  {:txcount=>61577, :netpeers=>7463, :ingresscount=>67996, :egresscount=>6420, :procload=>18623,
-		#  :sysload=>60953, :syswait=>71137, :threads=>43133, :writebytes=>79241, :readbytes=>70059,
-		#  :memallocs=>53033, :memfrees=>38643, :mempauses=>53891, :memused=>2002, 
-		#  :created_at=>"2021-03-30T18:54:01.757Z", :updated_at=>"2021-03-30T18:54:01.757Z"}, 
-		#    
-		#  {:txcount=>8510, :netpeers=>52605, :ingresscount=>60156, :egresscount=>28266, :procload=>89828, 
-		#   :sysload=>75561, :syswait=>87202, :threads=>34783, :writebytes=>35746, :readbytes=>71563, :memallocs=>14376, 
-		#   :memfrees=>89002, :mempauses=>29718, :memused=>25447, :created_at=>"2021-03-30T18:53:57.750Z", :updated_at=>"2021-03-30T18:53:57.750Z"},
-		
-		# _column_names = Metric.get_column_names_from_cache()
+	def start		
 
 		keys = []
 		@metrics.each do |mt|
@@ -42,39 +51,43 @@ class FindThresholdsAlertJob < ApplicationJob
 			end
 		end
 
+		#By finding equal ones, it will behave more efficiently in the main loop.
 		matches = @thresholds.all{|th| keys.include? th.name }
-		puts "matches; #{matches.to_json}"
 		return unless matches.present?
 
 		@metrics.each do |metric|
-
 			metric.each do |k,v|
-					
 				matches.each do |th|
 					if k == th.name 
-
-						# puts "th : #{th.to_json}"
-						# puts "key : #{k} , v : #{v}"
-						# puts "v < th.min : #{v < th.min}"
-						# puts "v < th.max : #{v < th.max}"
-
+						#If the metrics we have are out of the min and max ranges of the threshold, create an alert.
 						if (th.min.present? and v < th.min) or (th.max.present? and th.max < v)
-							temp = {
-								treshold_id: th.id,
-								metric: metric
-							}
-							unless @sending_email_list.include? temp
-								# puts "Adding ...."
-								@sending_email_list << temp
+							alert = Alert.create!(threshold_id: th.id, metric: metric, status: Alert.status_open)
+							if alert
+								puts "Alert has been created: #{alert.to_json}"
+							end
+							unless @sending_email_alert_ids.include? alert.id
+								@sending_email_alert_ids << alert.id
 							end
 						end
 					end
 				end
 			end
 		end
+	end
 
-		puts "sending_email_list; #{@sending_email_list}"
 
+	def send_notifier_job
+		if @sending_email_alert_ids.present?
+			#end the generated alert ids to the relevant email notifier.
+			puts "We are sending alert ids to the email notifiers"
+			unless Rails.env.test?
+				ThresholdNotifierJob.set(queue: :alert_notifier).perform_now(JSON.dump(@sending_email_alert_ids))
+			end
+		end
+
+		if Rails.env.test?
+			return @sending_email_alert_ids
+		end
 	end
 
 end
