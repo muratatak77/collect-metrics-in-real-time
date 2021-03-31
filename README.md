@@ -78,7 +78,7 @@ rails server
 ```
 
 ```
- bundle exec sidekiq
+bundle exec sidekiq
 ```
 
 ### Challenge details
@@ -86,8 +86,7 @@ rails server
 
 1. collect these metrics in real time using the agent
 
-I created an endpoint to collect in real time. 
-I thought 
+
 ```
 POST - http://localhost:3000/api/metrics
 GET  -  http://localhost:3000/api/metrics
@@ -139,7 +138,6 @@ GET -  http://localhost:3000/api/alert_update?alert_id=94&status=resolved
 #### Some Test Cases
 
 ```
-
 rspec spec/requests/metric_spec.rb
 
 rspec spec/models/threshold_spec.rb
