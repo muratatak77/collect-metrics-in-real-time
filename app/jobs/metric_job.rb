@@ -4,17 +4,18 @@ require 'redis_utils'
 class MetricJob < ApplicationJob
 
 =begin
-	In this class , I start to iterate over the redis increment key as reverse sorted. 
-	In Metrics Controller class, I kept until the 'Constant::REDIS_INC_MOD'
+  In this class , I start to iterate over the redis increment key as reverse sorted. 
+  In Metrics Controller class, I kept until the 'Constant::REDIS_INC_MOD'
 
-	By doing a reverse order, I start to process the data I hold in Redis.
-	I compare it with redis_key within each item for a safer operation.
-	Finally, with the method in the Metric class, I turn each item into a Metric object.
-	I save my data in a global result array in a batch way and once in DB. ("def create_metrics (result)") 
-	
-	After registering to DB, I call FindThresholdsAlertJob. This job will compare the respective metrics with the thresholds we have at our disposal.
-	Then I delete the data I process from the redis to prevent bloat inside Redis.
+  By doing a reverse order, I start to process the data I hold in Redis.
+  I compare it with redis_key within each item for a safer operation.
+  Finally, with the method in the Metric class, I turn each item into a Metric object.
+  I save my data in a global result array in a batch way and once in DB. ("def create_metrics (result)") 
+
+  After registering to DB, I call FindThresholdsAlertJob. This job will compare the respective metrics with the thresholds we have at our disposal.
+  Then I delete the data I process from the redis to prevent bloat inside Redis.
 =end
+
   queue_as :metric_data
 
   def perform()

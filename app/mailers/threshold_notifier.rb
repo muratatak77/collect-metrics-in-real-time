@@ -1,8 +1,8 @@
 class ThresholdNotifier < ApplicationMailer
 
 =begin
-Html page
-Views / threshold_notifier / new_alert.html.erb  
+  Html page
+  Views / threshold_notifier / new_alert.html.erb  
 =end
 
   def new_alert(alert_id)
