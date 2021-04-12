@@ -17,28 +17,28 @@ TODO : 1-) Redis INC function has max value. We need to reset when it will reach
 	https://github.com/mperham/sidekiq/wiki/Ent-Rate-Limiting
 =end
 
-	def create
-		render json: {status: :bad_request} unless params.present?
-		key = RedisUtils.set_inc_and_get_redis_key
-		set_params(key)
-		$redis.set(key, params[:metric].to_json)
-		if key.to_i % Constant::REDIS_INC_MOD == 0
-			MetricJob.set(queue: :metric_data).perform_later()
-		end
-		render json: {data: "OK"}, status: 200
-	end
+  def create
+    render json: {status: :bad_request} unless params.present?
+    key = RedisUtils.set_inc_and_get_redis_key
+    set_params(key)
+    $redis.set(key, params[:metric].to_json)
+    if key.to_i % Constant::REDIS_INC_MOD == 0
+      MetricJob.set(queue: :metric_data).perform_later()
+    end
+    render json: {data: "OK"}, status: 200
+  end
 
-	def index
-		@metrics = Metric.all.order("created_at DESC").limit(100)
-		render json: @metrics
-	end
+  def index
+    @metrics = Metric.all.order("created_at DESC").limit(100)
+    render json: @metrics
+  end
 
-	private
+  private
 
-	def set_params(key)
-		params[:metric][:created_at] = DateTime.now.utc
-		params[:metric][:updated_at] = DateTime.now.utc
-		params[:metric][:redis_key] = key
-	end
+  def set_params(key)
+    params[:metric][:created_at] = DateTime.now.utc
+    params[:metric][:updated_at] = DateTime.now.utc
+    params[:metric][:redis_key] = key
+  end
 
 end
