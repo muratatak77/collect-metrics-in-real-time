@@ -11,10 +11,10 @@ I collect data in the Redis until the redis increment count get % 5 or any numbe
 If I reach mod number == 0,  we can start a sidekiq active job, and I start to consume data in a sidekiq job.
 
 TODO : 1-) Redis INC function has max value. We need to reset when it will reach max number or any specific number
- 	=> Redis can hold upto 2 power 63. and throws error if it exceeds that limit. It might be either "out of range" error or "overflow" error
-	
-	2-) If you have Sidekiq Enterprise we can use Rate Limiter settings.
-	https://github.com/mperham/sidekiq/wiki/Ent-Rate-Limiting
+  => Redis can hold upto 2 power 63. and throws error if it exceeds that limit. It might be either "out of range" error or "overflow" error
+  
+  2-) If you have Sidekiq Enterprise we can use Rate Limiter settings.
+  https://github.com/mperham/sidekiq/wiki/Ent-Rate-Limiting
 =end
 
   def create
