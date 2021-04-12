@@ -7,7 +7,6 @@ class Api::AlertsController < ApplicationController
     alert_id = params[:alert_id]
 
     if alert_id.present? and status.present?
-
       if Alert.find(alert_id).update(status: status)
         render json: {status: :created}
       else

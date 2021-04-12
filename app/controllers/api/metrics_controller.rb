@@ -16,6 +16,7 @@ TODO : 1-) Redis INC function has max value. We need to reset when it will reach
 	2-) If you have Sidekiq Enterprise we can use Rate Limiter settings.
 	https://github.com/mperham/sidekiq/wiki/Ent-Rate-Limiting
 =end
+
 	def create
 		render json: {status: :bad_request} unless params.present?
 		key = RedisUtils.set_inc_and_get_redis_key
@@ -27,12 +28,10 @@ TODO : 1-) Redis INC function has max value. We need to reset when it will reach
 		render json: {data: "OK"}, status: 200
 	end
 
-
 	def index
 		@metrics = Metric.all.order("created_at DESC").limit(100)
 		render json: @metrics
 	end
-
 
 	private
 

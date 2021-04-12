@@ -31,63 +31,62 @@ require 'redis_utils'
 
 class FindThresholdsAlertJob < ApplicationJob
 
-	def perform(metrics)
-		@sending_email_alert_ids = []
-		@metrics = JSON.load(metrics)
-		@thresholds = Threshold.get_all_threshold_from_cache
-		start
-		send_notifier_job
-	end
+  def perform(metrics)
+    @sending_email_alert_ids = []
+    @metrics = JSON.load(metrics)
+    @thresholds = Threshold.get_all_threshold_from_cache
+    start
+    send_notifier_job
+  end
 
-	private 
+  private
+
+  def start
+
+    keys = []
+    @metrics.each do |mt|
+      mt.each do |k,v|
+        keys << k
+      end
+    end
+
+    #By finding equal ones, it will behave more efficiently in the main loop.
+    matches = @thresholds.all{|th| keys.include? th.name }
+    return unless matches.present?
+
+    @metrics.each do |metric|
+      metric.each do |k,v|
+        matches.each do |th|
+          if k == th.name
+            #If the metrics we have are out of the min and max ranges of the threshold, create an alert.
+            if (th.min.present? and v < th.min) or (th.max.present? and th.max < v)
+              alert = Alert.create!(threshold_id: th.id, metric: metric, status: Alert.status_open)
+              if alert
+                puts "Alert has been created: #{alert.to_json}"
+              end
+              unless @sending_email_alert_ids.include? alert.id
+                @sending_email_alert_ids << alert.id
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 
 
-	def start		
+  def send_notifier_job
+    if @sending_email_alert_ids.present?
+      #end the generated alert ids to the relevant email notifier.
+      puts "We are sending alert ids to the email notifiers"
+      unless Rails.env.test?
+        ThresholdNotifierJob.set(queue: :alert_notifier).perform_now(JSON.dump(@sending_email_alert_ids))
+      end
+    end
 
-		keys = []
-		@metrics.each do |mt|
-			mt.each do |k,v|
-				keys << k
-			end
-		end
-
-		#By finding equal ones, it will behave more efficiently in the main loop.
-		matches = @thresholds.all{|th| keys.include? th.name }
-		return unless matches.present?
-
-		@metrics.each do |metric|
-			metric.each do |k,v|
-				matches.each do |th|
-					if k == th.name 
-						#If the metrics we have are out of the min and max ranges of the threshold, create an alert.
-						if (th.min.present? and v < th.min) or (th.max.present? and th.max < v)
-							alert = Alert.create!(threshold_id: th.id, metric: metric, status: Alert.status_open)
-							if alert
-								puts "Alert has been created: #{alert.to_json}"
-							end
-							unless @sending_email_alert_ids.include? alert.id
-								@sending_email_alert_ids << alert.id
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-
-	def send_notifier_job
-		if @sending_email_alert_ids.present?
-			#end the generated alert ids to the relevant email notifier.
-			puts "We are sending alert ids to the email notifiers"
-			unless Rails.env.test?
-				ThresholdNotifierJob.set(queue: :alert_notifier).perform_now(JSON.dump(@sending_email_alert_ids))
-			end
-		end
-
-		if Rails.env.test?
-			return @sending_email_alert_ids
-		end
-	end
+    if Rails.env.test?
+      return @sending_email_alert_ids
+    end
+  end
 
 end

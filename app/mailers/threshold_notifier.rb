@@ -13,7 +13,6 @@ Views / threshold_notifier / new_alert.html.erb
   	end
   end
 
-
   private
 
   def get_subject

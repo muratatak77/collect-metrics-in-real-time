@@ -28,6 +28,5 @@ class Metric < ApplicationRecord
 		puts "Generated temp object : #{temp}"
 		temp
 	end
-	
 
 end

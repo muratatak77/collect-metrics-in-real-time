@@ -13,7 +13,6 @@ class MetricJob < ApplicationJob
 	I save my data in a global result array in a batch way and once in DB. ("def create_metrics (result)") 
 	
 	After registering to DB, I call FindThresholdsAlertJob. This job will compare the respective metrics with the thresholds we have at our disposal.
-
 	Then I delete the data I process from the redis to prevent bloat inside Redis.
 =end
 	queue_as :metric_data
