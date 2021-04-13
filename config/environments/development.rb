@@ -62,7 +62,7 @@ Rails.application.configure do
 
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
-  
+
   ENV['APPLICATION_HOST']= "http://localhost:3000/"
   ENV['SMTP_NO_REPLY'] = "no-reply@pin.pm"
   ENV['SENDING_EMAIL_TO'] = "daniel.varela@spin.pm"

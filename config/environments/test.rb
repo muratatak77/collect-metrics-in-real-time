@@ -57,7 +57,7 @@ Rails.application.configure do
 
   # Annotate rendered view with file names.
   # config.action_view.annotate_rendered_view_with_filenames = true
-  
+
   ENV['APPLICATION_HOST']= "http://localhost:3000/"
   ENV['SMTP_NO_REPLY'] = "no-reply@pin.pm"
   ENV['SENDING_EMAIL_TO'] = "daniel.varela@spin.pm"

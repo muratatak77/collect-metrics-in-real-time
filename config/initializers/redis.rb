@@ -8,5 +8,3 @@ puts " ========= REDIS  INITIALIZE ====== : #{$redis}"
 # Sidekiq.configure_server do |config|
 #   Sidekiq.options[:fetch] = Sidekiq::RateLimiter::Fetch
 # end
-
-
